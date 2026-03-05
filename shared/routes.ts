@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertEmailSchema, earlyAccessEmails } from "./schema";
+import { insertEmailSchema, insertPageVisitSchema, insertReviewSchema, earlyAccessEmails, pageVisits, reviews } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
@@ -21,6 +21,28 @@ export const api = {
         201: z.custom<typeof earlyAccessEmails.$inferSelect>(),
         400: errorSchemas.validation,
       },
+    },
+  },
+  retention: {
+    track: {
+      method: 'POST' as const,
+      path: '/api/retention/track' as const,
+      input: insertPageVisitSchema,
+    },
+    stats: {
+      method: 'GET' as const,
+      path: '/api/retention/stats' as const,
+    },
+  },
+  reviews: {
+    create: {
+      method: 'POST' as const,
+      path: '/api/reviews' as const,
+      input: insertReviewSchema,
+    },
+    list: {
+      method: 'GET' as const,
+      path: '/api/reviews' as const,
     },
   },
 };
