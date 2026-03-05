@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Typography */
+  --font-display: 'Fredoka', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+
+  /* Playful, energetic color palette */
+  --background: 40 33% 98%;      /* Warm, clean off-white #FCFBF8 */
+  --foreground: 222 47% 15%;     /* Deep friendly blue/gray */
+  
+  /* Vibrant Orange - Energetic, primary action */
+  --primary: 28 96% 53%;         
+  --primary-foreground: 0 0% 100%;
+  
+  /* Fresh Green - Health, progress, secondary action */
+  --secondary: 142 71% 45%;      
+  --secondary-foreground: 0 0% 100%;
+  
+  /* Accent Yellow/Gold - Treats, coins, gamification */
+  --accent: 45 93% 55%;          
+  --accent-foreground: 222 47% 15%;
+
+  --muted: 40 20% 92%;
+  --muted-foreground: 220 15% 45%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 15%;
+  
+  --border: 40 15% 88%;
+  --ring: 28 96% 53%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --radius: 1.5rem; /* Large rounded corners for gamified feel */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/20;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .font-body {
+    font-family: var(--font-body);
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .shadow-soft {
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05), 0 10px 20px -10px rgba(0, 0, 0, 0.02);
+  }
+  
+  .shadow-float {
+    box-shadow: 0 25px 50px -12px rgba(249, 115, 22, 0.15);
+  }
+}
+
+/* Custom playful button hover effect */
+.btn-bounce {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease-in-out;
+}
+.btn-bounce:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.02);
+}
+.btn-bounce:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
