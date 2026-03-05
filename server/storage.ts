@@ -68,6 +68,11 @@ export class DatabaseStorage implements IStorage {
         page: pageVisits.page,
         durationSeconds: pageVisits.durationSeconds,
         emailId: pageVisits.emailId,
+        utmSource: pageVisits.utmSource,
+        utmMedium: pageVisits.utmMedium,
+        utmCampaign: pageVisits.utmCampaign,
+        referrer: pageVisits.referrer,
+        maxScrollPercent: pageVisits.maxScrollPercent,
         visitedAt: pageVisits.visitedAt,
         email: earlyAccessEmails.email,
       })

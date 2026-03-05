@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Star } from "lucide-react";
+import { Star, ArrowDown, Link } from "lucide-react";
 
 interface PageVisit {
   id: number;
@@ -17,6 +17,11 @@ interface PageVisit {
   durationSeconds: number;
   emailId: number | null;
   email: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  referrer: string | null;
+  maxScrollPercent: number | null;
   visitedAt: string;
 }
 
@@ -29,7 +34,6 @@ interface RetentionStats {
 
 interface Review {
   id: number;
-  name: string;
   rating: number;
   comment: string;
   createdAt: string;
@@ -67,6 +71,32 @@ export default function RetentionDashboard() {
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : "0";
 
+  const avgScrollPercent = data?.visits.length
+    ? Math.round(
+        data.visits.reduce((sum, v) => sum + (v.maxScrollPercent ?? 0), 0) /
+          data.visits.length
+      )
+    : 0;
+
+  // Compute UTM source breakdown
+  const utmBreakdown = data?.visits.reduce<Record<string, number>>((acc, v) => {
+    const source = v.utmSource || "Direct / None";
+    acc[source] = (acc[source] || 0) + 1;
+    return acc;
+  }, {}) ?? {};
+
+  const referrerBreakdown = data?.visits.reduce<Record<string, number>>((acc, v) => {
+    if (v.referrer) {
+      try {
+        const host = new URL(v.referrer).hostname;
+        acc[host] = (acc[host] || 0) + 1;
+      } catch {
+        acc[v.referrer] = (acc[v.referrer] || 0) + 1;
+      }
+    }
+    return acc;
+  }, {}) ?? {};
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -87,7 +117,7 @@ export default function RetentionDashboard() {
     <div className="min-h-screen bg-background p-8">
       <h1 className="text-3xl font-bold mb-8">Retention Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm text-muted-foreground">
@@ -122,6 +152,20 @@ export default function RetentionDashboard() {
             </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">
+              Avg. Scroll Depth
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <ArrowDown className="w-6 h-6 text-blue-500" />
+              <p className="text-4xl font-bold">{avgScrollPercent}%</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Reviews Stats */}
@@ -153,6 +197,59 @@ export default function RetentionDashboard() {
         </Card>
       </div>
 
+      {/* UTM & Referrer Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Link className="w-4 h-4" />
+              Traffic Sources (UTM)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(utmBreakdown).length > 0 ? (
+              <div className="space-y-2">
+                {Object.entries(utmBreakdown)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([source, count]) => (
+                    <div key={source} className="flex justify-between items-center">
+                      <span className="text-sm">{source}</span>
+                      <span className="text-sm font-mono bg-muted px-2 py-0.5 rounded">{count}</span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">No UTM data yet.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Link className="w-4 h-4" />
+              Referrers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(referrerBreakdown).length > 0 ? (
+              <div className="space-y-2">
+                {Object.entries(referrerBreakdown)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([host, count]) => (
+                    <div key={host} className="flex justify-between items-center">
+                      <span className="text-sm">{host}</span>
+                      <span className="text-sm font-mono bg-muted px-2 py-0.5 rounded">{count}</span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">No referrer data yet.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Recent Visits</CardTitle>
@@ -165,6 +262,9 @@ export default function RetentionDashboard() {
                 <TableHead>Page</TableHead>
                 <TableHead>Email Filled</TableHead>
                 <TableHead>Duration</TableHead>
+                <TableHead>Scroll</TableHead>
+                <TableHead>UTM Source</TableHead>
+                <TableHead>Referrer</TableHead>
                 <TableHead>Visited At</TableHead>
               </TableRow>
             </TableHeader>
@@ -183,6 +283,21 @@ export default function RetentionDashboard() {
                     )}
                   </TableCell>
                   <TableCell>{formatDuration(visit.durationSeconds)}</TableCell>
+                  <TableCell>{visit.maxScrollPercent ?? 0}%</TableCell>
+                  <TableCell>
+                    {visit.utmSource ? (
+                      <span className="text-xs">{visit.utmSource}{visit.utmMedium ? ` / ${visit.utmMedium}` : ""}</span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {visit.referrer ? (
+                      <span className="text-xs truncate max-w-[150px] block">{(() => { try { return new URL(visit.referrer).hostname; } catch { return visit.referrer; } })()}</span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">Direct</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {new Date(visit.visitedAt).toLocaleString()}
                   </TableCell>
@@ -190,7 +305,7 @@ export default function RetentionDashboard() {
               ))}
               {(!data?.visits || data.visits.length === 0) && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
                     No visits recorded yet.
                   </TableCell>
                 </TableRow>
@@ -209,7 +324,6 @@ export default function RetentionDashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
                 <TableHead>Rating</TableHead>
                 <TableHead>Comment</TableHead>
                 <TableHead>Date</TableHead>
@@ -218,7 +332,6 @@ export default function RetentionDashboard() {
             <TableBody>
               {reviews.map((review) => (
                 <TableRow key={review.id}>
-                  <TableCell className="font-medium">{review.name}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -231,7 +344,7 @@ export default function RetentionDashboard() {
               ))}
               {reviews.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={3} className="text-center text-muted-foreground">
                     No reviews yet.
                   </TableCell>
                 </TableRow>
