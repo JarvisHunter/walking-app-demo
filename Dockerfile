@@ -15,9 +15,12 @@ FROM node:22-alpine
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm install --omit=dev
+RUN npm install --omit=dev && npm install drizzle-kit tsx
 
 COPY --from=builder /app/dist ./dist
+COPY drizzle.config.ts ./
+COPY shared ./shared
+COPY tsconfig.json ./
 
 EXPOSE 5000
 
